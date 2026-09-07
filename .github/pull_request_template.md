@@ -1,0 +1,21 @@
+<!-- Заголовок PR: WS2: <ім'я> -->
+
+## Що зроблено
+
+- [ ] **Task A:** ≥6 промптів у `prompts/` за шаблоном + оновлений `prompts/README.md`; один промпт у двох діалектах
+- [ ] **Task B:** `docs/sanitized-brief.md` + `docs/sanitization-checklist.md`
+- [ ] **Task C:** `docs/injection-report.md` («до/після») + захисні правила в `AGENTS.md`
+- [ ] **Task D (bonus):** 1–2 команди в `.claude/commands/` або `.cursor/commands/`
+- [ ] `cd app && npm test` зелений; жодних секретів і `.env` у git
+
+## Найкорисніший промпт
+
+<!-- який промпт з вашого cookbook реально зекономить час команді і чому -->
+
+## Що показала атака (Task C)
+
+<!-- чи піддався агент до захисту; що саме його зупинило -->
+
+---
+CodeRabbit зробить рев'ю. Якщо воно не з'явилося за кілька хвилин — додайте коментар `@coderabbitai review`.
+Інші команди: `@coderabbitai summary`, `@coderabbitai help`.

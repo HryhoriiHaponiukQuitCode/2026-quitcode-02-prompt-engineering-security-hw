@@ -1,0 +1,15 @@
+{
+  "name": "quitcode-ws02-quote",
+  "private": true,
+  "type": "module",
+  "description": "Tiny quote calculator — the target codebase for the WS2 prompt cookbook",
+  "scripts": {
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^26.5.0",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.0"
+  }
+}

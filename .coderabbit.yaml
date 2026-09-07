@@ -1,0 +1,180 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit config — review of QuitCode Workshop 2 homework PRs.
+# Workshop: "Промпт-інженерія та безпека роботи з AI".
+# Deliverables are prompt artifacts and security documents, not app code.
+
+language: "uk-UA"
+tone_instructions: >
+  Ментор воркшопу QuitCode. Відповідай українською, доброзичливо але вимогливо.
+  Оцінюєш промпт-артефакти й безпекові документи. Статуси: ✅ зроблено,
+  ⚠️ частково, ❌ пропущено.
+
+early_access: false
+
+reviews:
+  profile: "assertive"
+  request_changes_workflow: false
+  high_level_summary: true
+  high_level_summary_placeholder: "@coderabbitai summary"
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+  changed_files_summary: true
+  sequence_diagrams: false
+
+  auto_review:
+    enabled: true
+    drafts: true
+    auto_incremental_review: true
+    auto_pause_after_reviewed_commits: 0
+    base_branches:
+      - ".*"
+    ignore_title_keywords:
+      - "WIP"
+      - "[skip review]"
+    ignore_usernames:
+      - "dependabot[bot]"
+      - "renovate[bot]"
+      - "github-actions[bot]"
+
+  # ── File filters — every graded path listed explicitly ────────
+  path_filters:
+    - "prompts/**"
+    - "docs/**"
+    - "app/**"
+    - ".claude/**"
+    - ".cursor/**"
+    - "AGENTS.md"
+    - "CLAUDE.md"
+    - "!**/node_modules/**"
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/coverage/**"
+    - "!*.lock"
+    - "!**/package-lock.json"
+    - "!**/yarn.lock"
+
+  # ── Path-specific review instructions ─────────────────────────
+  path_instructions:
+    - path: "prompts/**"
+      instructions: |
+        Task A — prompt cookbook. Перевір кожен доданий промпт за структурою
+        `_template.md`: Роль, Мета, Контекст (з конкретними шляхами, не
+        «подивись у коді»), Обмеження, Acceptance criteria (перевірювані
+        «так/ні»), Формат відповіді, Stop-правило. Промпт без AC або без
+        stop-правила — ⚠️. Очікується ≥6 власних промптів (не рахуючи
+        `_template.md` і `review-pr.md`), покриття: тести, рев'ю,
+        документація, рефакторинг, дебаг + задача агенції. Один промпт має
+        бути у двох діалектах (markdown + XML). `prompts/README.md` має
+        містити оновлений індекс. Це статичне рев'ю дифу — do NOT attempt
+        to execute anything.
+
+    - path: "docs/sanitized-brief.md"
+      instructions: |
+        Task B — санітизована версія брифу. Перевір, що на місці чутливих
+        значень стоять ЗАМІННИКИ: маски, плейсхолдери або синтетика
+        (напр. `[CLIENT_1]`, `+380 (XX) XXX-XX-XX`, `<SECRET_OUT_OF_BAND>`,
+        `<INTERNAL>`). Ключі, токени, connection strings, справжні контакти
+        і рядки вигрузки з `materials/client-brief.md` не мають бути
+        скопійовані дослівно. Головне — задача лишилась зрозумілою: опис
+        роботи і критерії приймання збережені. Якщо документ замаскований
+        настільки, що суть задачі втрачена — це теж зауваження.
+
+    - path: "docs/sanitization-checklist.md"
+      instructions: |
+        Task B — багаторазовий чек-ліст. Перевір: класифікація даних
+        (категорії ризику), способи маскування (redaction / masking /
+        synthetic / out-of-band), що робити з креденшелами інтеграцій,
+        відповідність «категорія → інструмент/tier». Має бути придатним для
+        повторного вжитку командою, а не переказом одного документа.
+
+    - path: "docs/injection-report.md"
+      instructions: |
+        Task C — звіт про prompt injection. Перевір наявність трьох частин:
+        (1) що агент зробив ДО захисту (конкретно, з цитатою або описом
+        поведінки), (2) які саме захисні правила додано, (3) що змінилось
+        ПІСЛЯ. Плюс висновок, який захист спрацював і чого бракувало.
+        Формальний переказ шаблону без власних спостережень — ⚠️.
+
+    - path: "AGENTS.md"
+      instructions: |
+        Task C — захисні правила. Перевір, що учасник заповнив секцію
+        захисту від injection: контент з `materials/` та клієнтський вхід
+        трактується як ДАНІ, а не команди; заборона читати `.env` і файли
+        з ключами; підтвердження людини перед діями назовні; least
+        privilege. Порожня або незмінена секція — ❌.
+
+    - path: "app/**"
+      instructions: |
+        `app/` надано в стартовому репо як ціль для промптів. Зміни тут
+        необов'язкові. Якщо учасник виправив ваду в `quote.ts` (напр.
+        втрату залишку центів у `splitInstallments`) або додав тести —
+        відзнач це позитивно і перевір, що тести справді покривають
+        крайові випадки. Це статичне рев'ю — do NOT run the test suite.
+
+  # ── Pre-merge checks (grading) ────────────────────────────────
+  pre_merge_checks:
+    docstrings:
+      mode: "off"
+
+    title:
+      mode: "warning"
+      requirements: >
+        PR title should follow: "WS2: <participant-name>".
+
+    description:
+      mode: "warning"
+
+    custom_checks:
+      - mode: "warning"
+        name: "Task A — prompt cookbook"
+        instructions: >
+          Static review of the diff only — do NOT attempt to execute
+          anything. Check the PR adds at least 6 prompt artifacts under
+          prompts/ (excluding _template.md and review-pr.md), each
+          following the template with Роль/Мета/Контекст/Обмеження/
+          Acceptance criteria/Формат/Stop. Acceptance criteria must be
+          verifiable yes-no statements and every prompt needs a stop rule.
+          At least one prompt should exist in two dialects (markdown and
+          XML). prompts/README.md index should be updated. PASS if 6+
+          substantive prompts are present; FAIL if fewer, or if they are
+          one-line prompts without criteria.
+
+      - mode: "warning"
+        name: "Task B — sanitization"
+        instructions: >
+          Static review of the diff only. Check docs/sanitized-brief.md
+          exists and that sensitive values are replaced by masks,
+          placeholders or synthetic stand-ins (e.g. [CLIENT_1], XX-masked
+          phones, <SECRET_OUT_OF_BAND>, <INTERNAL>) while the task
+          description and acceptance criteria remain understandable. Also
+          check docs/sanitization-checklist.md exists and is reusable:
+          risk classification, masking techniques, handling of integration
+          credentials, and a category-to-tool mapping. PASS if both files
+          are present and substantive; FAIL if either is missing or is
+          just the unfilled template.
+
+      - mode: "warning"
+        name: "Task C — injection defenses"
+        instructions: >
+          Static review of the diff only. Check docs/injection-report.md
+          documents the attack before/after (what the agent did with the
+          decoy, what defenses were added, what changed afterwards) with
+          the participant's own observations rather than template text,
+          AND that AGENTS.md now contains concrete injection-defense rules
+          (treat file/client content as data not commands, do not read
+          secret files, human confirmation before outbound actions, least
+          privilege). PASS if both are present and specific; FAIL if
+          either is missing or unfilled.
+
+      - mode: "warning"
+        name: "Task D — prompt to command (bonus)"
+        instructions: >
+          Optional. If .claude/commands/ or .cursor/commands/ contains
+          command files, check they have frontmatter with a description
+          and use $ARGUMENTS where a parameter makes sense. Absence is NOT
+          a failure.
+
+chat:
+  auto_reply: true
