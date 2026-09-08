@@ -121,10 +121,17 @@ reviews:
     title:
       mode: "warning"
       requirements: >
-        PR title should follow: "WS2: <participant-name>".
+        PR title should follow: "WS2: <participant full name>".
 
     description:
       mode: "warning"
+      requirements: >
+        The PR description MUST contain a filled-in "Ім'я та Прізвище" field
+        under the "Учасник" heading with the participant's real full name
+        (two words). An empty field, a leftover placeholder, or only a GitHub
+        login is NOT acceptable — say so explicitly and ask the author to add
+        it. Also check the task checklist is filled in rather than left as
+        unchecked template boxes.
 
     custom_checks:
       - mode: "warning"
