@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { estimateTotalCents, formatMoney, splitInstallments } from "./quote.js";
+import {
+  MAX_INSTALLMENTS,
+  QuoteInputError,
+  estimateTotalCents,
+  formatMoney,
+  splitInstallments,
+} from "./quote.js";
 
 // Базові (happy path) тести. Навмисно неповні — розширення покриття
 // це і є ваш перший промпт з cookbook (Task A).
@@ -113,5 +119,35 @@ describe("formatMoney — крайові випадки", () => {
 
   it("відхиляє нецілі центи замість зламаного рядка", () => {
     expect(() => formatMoney(1234.5)).toThrow();
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Знахідки CodeRabbit на PR #6 — межі, яких не було в першому проході.
+// Усі три ламали задокументований контракт, а не лише «незручний вхід».
+// ─────────────────────────────────────────────────────────────────────────
+
+describe("межі числових діапазонів (рев'ю PR #6)", () => {
+  it("estimateTotalCents відхиляє переповнення замість NaN/Infinity", () => {
+    expect(() => estimateTotalCents({ hours: Number.MAX_VALUE, rateCents: 2 })).toThrow();
+  });
+
+  it("splitInstallments відхиляє небезпечне ціле замість втрати точності", () => {
+    // 9007199254740994 > 2^53-1: сума частин виходила 9007199254740996
+    expect(() => splitInstallments(9007199254740994, 3)).toThrow();
+  });
+
+  it("splitInstallments відхиляє надто велике parts своєю помилкою, не RangeError", () => {
+    expect(() => splitInstallments(100, 4294967296)).toThrow(QuoteInputError);
+  });
+
+  it("splitInstallments приймає parts рівно на межі MAX_INSTALLMENTS", () => {
+    const parts = splitInstallments(1_000_000, MAX_INSTALLMENTS);
+    expect(parts).toHaveLength(MAX_INSTALLMENTS);
+    expect(parts.reduce((a, b) => a + b, 0)).toBe(1_000_000);
+  });
+
+  it("formatMoney відхиляє небезпечне ціле", () => {
+    expect(() => formatMoney(9007199254740994)).toThrow();
   });
 });

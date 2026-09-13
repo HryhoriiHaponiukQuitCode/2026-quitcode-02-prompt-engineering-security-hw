@@ -39,8 +39,18 @@ Senior TypeScript-розробник, який пише production-тести. �
 
 ## Acceptance criteria
 
-- [ ] Кожна експортована функція `quote.ts` має тест на: нуль, від'ємне значення,
-      неціле ділення, верхню межу діапазону.
+- [ ] Кожна експортована функція має тести на **релевантні саме їй** межі —
+      однаковий список для всіх функцій не працює (`formatMoney` нічого не
+      ділить). Матриця для `quote.ts`:
+
+      | Функція | Обов'язкові межі |
+      |---|---|
+      | `estimateTotalCents` | нуль; від'ємні `hours`/`rateCents`; `discountPercent` = 0, 100, >100; дробові `hours`; переповнення результату |
+      | `splitInstallments` | `parts` = 1, 0, від'ємне, дробове, надмірно велике; `total % parts !== 0`; від'ємний `total`; небезпечне ціле |
+      | `formatMoney` | нуль; < 100 центів; від'ємне; нецілий вхід; небезпечне ціле |
+
+      Для іншого модуля — побудуй таку саму матрицю з його домену, а не
+      переноси цю.
 - [ ] Є явний тест-інваріант: `splitInstallments(total, parts).reduce(sum) === total`
       мінімум для 3 пар, де `total % parts !== 0` (напр. 100/3, 100/8, 270000/7).
 - [ ] Є тест на `parts = 0` і `parts < 0` з очікуваною поведінкою (throw), а не з `NaN`.
@@ -118,7 +128,10 @@ A/B-експеримент — чесно кажу, що це аналіз, а �
   <target>app/src/quote.ts</target>
   <tests>app/src/quote.test.ts (vitest, ESM, імпорт через ./quote.js)</tests>
   <domain>Кошториси; суми — цілі числа в центах; float у грошах заборонений</domain>
-  <commands>cd app &amp;&amp; npm test | cd app &amp;&amp; npm run typecheck</commands>
+  <commands>
+    <command>cd app &amp;&amp; npm test</command>
+    <command>cd app &amp;&amp; npm run typecheck</command>
+  </commands>
   <invariants>
     <item>sum(splitInstallments(total, parts)) === total</item>
     <item>будь-яка сума в центах — ціле число</item>
@@ -132,10 +145,10 @@ A/B-експеримент — чесно кажу, що це аналіз, а �
   <no>snapshot-тести на числах</no>
 </constraints>
 <acceptance>
-  <item>кожна експортована функція: нуль, від'ємне, неціле ділення, межа</item>
+  <item>кожна функція — межі свого домену (матриця), не спільний список</item>
   <item>інваріант суми перевірено на 3 парах, де total % parts !== 0</item>
   <item>parts = 0 і parts &lt; 0 очікують throw</item>
-  <item>typecheck без помилок</item>
+  <item>обидві команди пройдено окремо; статус кожної перевірено самостійно</item>
   <item>виведено список червоних тестів з очікуваним і фактичним</item>
 </acceptance>
 <format>1) список інваріантів 2) діф тестів 3) таблиця тест|очікував|отримав</format>

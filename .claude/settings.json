@@ -17,7 +17,12 @@
       "Read(~/.ssh/**)",
       "Read(~/.config/gh/**)",
 
-      "Bash(cat:*.env*)",
+      "Bash(cat *.env*)",
+      "Bash(cat *.pem)",
+      "Bash(head *.env*)",
+      "Bash(tail *.env*)",
+      "Bash(less *.env*)",
+      "Bash(grep * .env*)",
       "Bash(curl:*)",
       "Bash(wget:*)",
       "Bash(nc:*)",

@@ -14,6 +14,14 @@ export interface QuoteInput {
   discountPercent?: number;
 }
 
+/**
+ * Практична верхня межа кількості платежів. Обрана як явна доменна межа:
+ * розстрочка на 10 000 платежів — це помилка введення, а не бізнес-сценарій.
+ * Без цієї перевірки великі значення падають усередині `Array.from`
+ * з нативним `RangeError`, тобто не тим типом, який обіцяє контракт.
+ */
+export const MAX_INSTALLMENTS = 10_000;
+
 /** Помилка некоректного входу в розрахунок кошторису. */
 export class QuoteInputError extends Error {
   constructor(message: string) {
@@ -35,15 +43,21 @@ function assertNonNegative(value: number, name: string): void {
 }
 
 function assertInteger(value: number, name: string): void {
-  if (!Number.isInteger(value)) {
-    throw new QuoteInputError(`${name} має бути цілим числом, отримано: ${value}`);
+  // isSafeInteger, а не isInteger: поза ±2^53 арифметика втрачає точність
+  // і інваріант суми перестає виконуватись (див. тест на 9007199254740994).
+  if (!Number.isSafeInteger(value)) {
+    throw new QuoteInputError(
+      `${name} має бути безпечним цілим числом (|x| <= 2^53-1), отримано: ${value}`,
+    );
   }
 }
 
 /**
  * Ціна проєкту в центах з урахуванням знижки.
  *
- * Контракт: результат — ціле число центів, завжди `>= 0`.
+ * Контракт: результат — **безпечне** ціле число центів, завжди `>= 0`.
+ * Переповнення (напр. `hours: Number.MAX_VALUE`) відхиляється помилкою,
+ * а не повертається як `Infinity`/`NaN`.
  *
  * НЕ визначено контрактом: напрямок округлення при дробових `hours`
  * (зараз `Math.round`, тобто 0.5 цента йде вгору — на користь виконавця).
@@ -71,7 +85,18 @@ export function estimateTotalCents(input: QuoteInput): number {
 
   const gross = hours * rateCents;
   const discount = (gross * discountPercent) / 100;
-  return Math.round(gross - discount);
+  const total = Math.round(gross - discount);
+
+  // Вхід може бути валідним, а результат — ні: hours = Number.MAX_VALUE
+  // і rateCents = 2 дають переповнення. Контракт обіцяє ціле число центів,
+  // тож перевіряємо результат, а не лише аргументи.
+  if (!Number.isSafeInteger(total)) {
+    throw new QuoteInputError(
+      `результат розрахунку виходить за межі безпечних цілих: ${hours} год × ${rateCents} центів`,
+    );
+  }
+
+  return total;
 }
 
 /**
@@ -86,6 +111,9 @@ export function estimateTotalCents(input: QuoteInput): number {
  * і поведінка при `totalCents < 0` (інваріант суми тримається, але сценарій
  * повернення коштів не продуманий). Не покладайтесь на це.
  *
+ * Межі: `totalCents` має бути безпечним цілим (|x| ≤ 2^53−1), `parts` —
+ * цілим у діапазоні 1..{@link MAX_INSTALLMENTS}.
+ *
  * @example splitInstallments(100, 3) // [34, 33, 33] — сума 100
  * @example splitInstallments(100, 8) // [13,13,13,13,12,12,12,12] — сума 100
  * @throws {QuoteInputError} якщо `totalCents` не ціле, або `parts` не є
@@ -99,6 +127,11 @@ export function splitInstallments(totalCents: number, parts: number): number[] {
 
   if (!Number.isInteger(parts) || parts <= 0) {
     throw new QuoteInputError(`parts має бути цілим числом > 0, отримано: ${parts}`);
+  }
+  if (parts > MAX_INSTALLMENTS) {
+    throw new QuoteInputError(
+      `parts не може перевищувати ${MAX_INSTALLMENTS}, отримано: ${parts}`,
+    );
   }
 
   // Реалізація: метод найбільшого залишку. Деталь, а не обіцянка —
