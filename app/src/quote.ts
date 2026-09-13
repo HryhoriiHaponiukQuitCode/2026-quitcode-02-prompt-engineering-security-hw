@@ -28,6 +28,18 @@ function assertFinite(value: number, name: string): void {
   }
 }
 
+function assertNonNegative(value: number, name: string): void {
+  if (value < 0) {
+    throw new QuoteInputError(`${name} не може бути від'ємним, отримано: ${value}`);
+  }
+}
+
+function assertInteger(value: number, name: string): void {
+  if (!Number.isInteger(value)) {
+    throw new QuoteInputError(`${name} має бути цілим числом, отримано: ${value}`);
+  }
+}
+
 /**
  * Ціна проєкту в центах з урахуванням знижки.
  *
@@ -48,12 +60,9 @@ export function estimateTotalCents(input: QuoteInput): number {
   assertFinite(rateCents, "rateCents");
   assertFinite(discountPercent, "discountPercent");
 
-  if (hours < 0) {
-    throw new QuoteInputError(`hours не може бути від'ємним, отримано: ${hours}`);
-  }
-  if (rateCents < 0) {
-    throw new QuoteInputError(`rateCents не може бути від'ємним, отримано: ${rateCents}`);
-  }
+  assertNonNegative(hours, "hours");
+  assertNonNegative(rateCents, "rateCents");
+
   if (discountPercent < 0 || discountPercent > 100) {
     throw new QuoteInputError(
       `discountPercent має бути в межах 0..100, отримано: ${discountPercent}`,
@@ -86,9 +95,8 @@ export function splitInstallments(totalCents: number, parts: number): number[] {
   assertFinite(totalCents, "totalCents");
   assertFinite(parts, "parts");
 
-  if (!Number.isInteger(totalCents)) {
-    throw new QuoteInputError(`totalCents має бути цілим числом центів, отримано: ${totalCents}`);
-  }
+  assertInteger(totalCents, "totalCents");
+
   if (!Number.isInteger(parts) || parts <= 0) {
     throw new QuoteInputError(`parts має бути цілим числом > 0, отримано: ${parts}`);
   }
@@ -118,9 +126,7 @@ export function splitInstallments(totalCents: number, parts: number): number[] {
 export function formatMoney(cents: number): string {
   assertFinite(cents, "cents");
 
-  if (!Number.isInteger(cents)) {
-    throw new QuoteInputError(`cents має бути цілим числом, отримано: ${cents}`);
-  }
+  assertInteger(cents, "cents");
 
   const sign = cents < 0 ? "-" : "";
   const abs = Math.abs(cents);
