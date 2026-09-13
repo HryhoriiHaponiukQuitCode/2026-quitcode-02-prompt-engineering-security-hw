@@ -52,15 +52,20 @@ describe("estimateTotalCents — крайові випадки", () => {
   });
 
   it("відхиляє знижку понад 100% замість від'ємного кошторису", () => {
-    expect(() => estimateTotalCents({ hours: 10, rateCents: 5000, discountPercent: 150 })).toThrow();
+    expect(() => estimateTotalCents({ hours: 10, rateCents: 5000, discountPercent: 150 })).toThrow(QuoteInputError);
   });
 
   it("відхиляє від'ємні години", () => {
-    expect(() => estimateTotalCents({ hours: -1, rateCents: 5000 })).toThrow();
+    expect(() => estimateTotalCents({ hours: -1, rateCents: 5000 })).toThrow(QuoteInputError);
   });
 
   it("відхиляє від'ємну ставку", () => {
-    expect(() => estimateTotalCents({ hours: 10, rateCents: -5000 })).toThrow();
+    expect(() => estimateTotalCents({ hours: 10, rateCents: -5000 })).toThrow(QuoteInputError);
+  });
+
+  it("відхиляє дробову ставку — rateCents це центи", () => {
+    // {hours: 2, rateCents: 0.5} раніше давало валідний результат 1
+    expect(() => estimateTotalCents({ hours: 2, rateCents: 0.5 })).toThrow(QuoteInputError);
   });
 });
 
@@ -92,15 +97,15 @@ describe("splitInstallments — інваріант суми", () => {
   });
 
   it("відхиляє нуль частин замість тихої втрати суми", () => {
-    expect(() => splitInstallments(100, 0)).toThrow();
+    expect(() => splitInstallments(100, 0)).toThrow(QuoteInputError);
   });
 
   it("відхиляє від'ємну кількість частин", () => {
-    expect(() => splitInstallments(100, -1)).toThrow();
+    expect(() => splitInstallments(100, -1)).toThrow(QuoteInputError);
   });
 
   it("відхиляє дробову кількість частин", () => {
-    expect(() => splitInstallments(100, 2.5)).toThrow();
+    expect(() => splitInstallments(100, 2.5)).toThrow(QuoteInputError);
   });
 });
 
@@ -118,7 +123,7 @@ describe("formatMoney — крайові випадки", () => {
   });
 
   it("відхиляє нецілі центи замість зламаного рядка", () => {
-    expect(() => formatMoney(1234.5)).toThrow();
+    expect(() => formatMoney(1234.5)).toThrow(QuoteInputError);
   });
 });
 
@@ -129,12 +134,12 @@ describe("formatMoney — крайові випадки", () => {
 
 describe("межі числових діапазонів (рев'ю PR #6)", () => {
   it("estimateTotalCents відхиляє переповнення замість NaN/Infinity", () => {
-    expect(() => estimateTotalCents({ hours: Number.MAX_VALUE, rateCents: 2 })).toThrow();
+    expect(() => estimateTotalCents({ hours: Number.MAX_VALUE, rateCents: 2 })).toThrow(QuoteInputError);
   });
 
   it("splitInstallments відхиляє небезпечне ціле замість втрати точності", () => {
     // 9007199254740994 > 2^53-1: сума частин виходила 9007199254740996
-    expect(() => splitInstallments(9007199254740994, 3)).toThrow();
+    expect(() => splitInstallments(9007199254740994, 3)).toThrow(QuoteInputError);
   });
 
   it("splitInstallments відхиляє надто велике parts своєю помилкою, не RangeError", () => {
@@ -148,6 +153,6 @@ describe("межі числових діапазонів (рев'ю PR #6)", () 
   });
 
   it("formatMoney відхиляє небезпечне ціле", () => {
-    expect(() => formatMoney(9007199254740994)).toThrow();
+    expect(() => formatMoney(9007199254740994)).toThrow(QuoteInputError);
   });
 });

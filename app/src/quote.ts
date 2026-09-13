@@ -62,6 +62,8 @@ function assertInteger(value: number, name: string): void {
  * НЕ визначено контрактом: напрямок округлення при дробових `hours`
  * (зараз `Math.round`, тобто 0.5 цента йде вгору — на користь виконавця).
  *
+ * `rateCents` має бути цілим (це центи); `hours` може бути дробовим.
+ *
  * @example estimateTotalCents({ hours: 10, rateCents: 5000 })                      // 50000
  * @example estimateTotalCents({ hours: 10, rateCents: 5000, discountPercent: 10 }) // 45000
  * @throws {QuoteInputError} якщо `hours` або `rateCents` від'ємні,
@@ -74,6 +76,9 @@ export function estimateTotalCents(input: QuoteInput): number {
   assertFinite(rateCents, "rateCents");
   assertFinite(discountPercent, "discountPercent");
 
+  // rateCents — сума в центах, тож дробове значення беззмістовне:
+  // { hours: 2, rateCents: 0.5 } давало валідний результат 1 цент.
+  assertInteger(rateCents, "rateCents");
   assertNonNegative(hours, "hours");
   assertNonNegative(rateCents, "rateCents");
 
