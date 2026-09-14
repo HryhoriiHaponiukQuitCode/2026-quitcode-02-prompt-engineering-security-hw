@@ -1,6 +1,5 @@
 {
   "$schema": "https://json.schemastore.org/claude-code-settings.json",
-
   "permissions": {
     "deny": [
       "Read(.env)",
@@ -16,7 +15,6 @@
       "Read(~/.aws/**)",
       "Read(~/.ssh/**)",
       "Read(~/.config/gh/**)",
-
       "Bash(cat *.env*)",
       "Bash(cat *.pem)",
       "Bash(head *.env*)",
@@ -27,16 +25,27 @@
       "Bash(wget:*)",
       "Bash(nc:*)",
       "Bash(ssh:*)",
-
       "WebFetch"
     ],
-
     "ask": [
       "Bash(git push:*)",
       "Bash(gh pr create:*)",
       "Bash(gh pr comment:*)",
       "Bash(gh api:*)",
       "Bash(npm publish:*)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Read|Grep|Glob|Edit|Write|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"$CLAUDE_PROJECT_DIR/.claude/hooks/block-secret-paths.py\""
+          }
+        ]
+      }
     ]
   }
 }
